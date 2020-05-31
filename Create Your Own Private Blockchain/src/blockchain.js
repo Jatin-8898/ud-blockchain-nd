@@ -130,8 +130,6 @@ class Blockchain {
 				new Date().getTime().toString().slice(0, -3)
             );
             console.log(currentTime - time <= 5 * 60);
-			console.log(time);
-			console.log(currentTime);
             // If the time elapsed is less than 5 minutes
 			if (currentTime - time <= 5 * 60000) {
 				if (bitcoinMessage.verify(message, address, signature)) {

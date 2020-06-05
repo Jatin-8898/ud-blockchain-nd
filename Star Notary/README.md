@@ -54,6 +54,9 @@ Add a function lookUptokenIdToStarInfo, that looks up the stars using the Token 
 
 **Application runs successfully!**
 ![image info](./snips/1.png)
+
 ![image info](./snips/2.png)
+
 ![image info](./snips/3.png)
+
 ![image info](./snips/4.png)

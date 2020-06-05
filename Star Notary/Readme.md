@@ -3,7 +3,7 @@
 ## Core project information
 
 ### Truffle and OpenZeppelin versions used in project:
-- Truffle v5.1.23 (Core: 5.1.23)
+- Truffle v5.1.28 (Core: 5.1.28)
 - OpenZeppelin v2.1.2
 
 ### The ERC-721 Token Name

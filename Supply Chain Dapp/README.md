@@ -75,11 +75,15 @@ All the snips of the running project
 
 ![1](./snips/1.png)
 
+
 ![2](./snips/2.png)
+
 
 ![3](./snips/3.png)
 
+
 ![4](./snips/4.png)
+
 
 ## Built With
 

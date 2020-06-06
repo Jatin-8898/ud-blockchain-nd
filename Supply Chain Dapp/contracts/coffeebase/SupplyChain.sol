@@ -7,7 +7,7 @@ import "../coffeeaccesscontrol/FarmerRole.sol";
 import "../coffeeaccesscontrol/RetailerRole.sol";
 
 // Define a contract 'Supplychain'
-contract SupplyChain {
+contract SupplyChain is FarmerRole, DistributorRole, ConsumerRole, RetailerRole {
 
   // Define 'owner'
   address owner;
@@ -160,14 +160,22 @@ contract SupplyChain {
   }
 
   // Define a function 'harvestItem' that allows a farmer to mark an item 'Harvested'
-  function harvestItem(uint _upc, address _originFarmerID, string _originFarmName, string _originFarmInformation, string  _originFarmLatitude, string  _originFarmLongitude, string  _productNotes) public 
+  function harvestItem(
+    uint _upc, 
+    address _originFarmerID, 
+    string _originFarmName, 
+    string _originFarmInformation, 
+    string _originFarmLatitude, 
+    string _originFarmLongitude, 
+    string _productNotes
+  ) public 
   {
     // Add the new item as part of Harvest
     uint productID = _upc + sku;        //Combine sku and upc to create a product id
     // Add the new item as part of Harvest
     items[_upc].sku = sku;
     items[_upc].upc = _upc;
-    items[_upc].ownerID = owner;
+    items[_upc].ownerID = msg.sender;
     items[_upc].originFarmerID = _originFarmerID;
     items[_upc].originFarmName = _originFarmName;
     items[_upc].originFarmInformation = _originFarmInformation;
@@ -191,7 +199,7 @@ contract SupplyChain {
   // Call modifier to check if upc has passed previous supply chain stage
   harvested(_upc)
   // Call modifier to verify caller of this function
-  verifyCaller(items[_upc].originFarmerID)
+  verifyCaller(items[_upc].ownerID)
   {
     // Update the appropriate fields
     items[_upc].itemState = State.Processed;
@@ -204,7 +212,7 @@ contract SupplyChain {
   // Call modifier to check if upc has passed previous supply chain stage
   processed(_upc)
   // Call modifier to verify caller of this function
-  verifyCaller(items[_upc].originFarmerID)
+  verifyCaller(items[_upc].ownerID)
   {
     // Update the appropriate fields
     items[_upc].itemState = State.Packed;
@@ -217,7 +225,7 @@ contract SupplyChain {
   // Call modifier to check if upc has passed previous supply chain stage
   packed(_upc)
   // Call modifier to verify caller of this function
-  verifyCaller(items[_upc].originFarmerID)
+  verifyCaller(items[_upc].ownerID)
   {
     // Update the appropriate fields
     items[_upc].itemState = State.ForSale;

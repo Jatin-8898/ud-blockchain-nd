@@ -24,7 +24,9 @@ var Config = async function(accounts) {
     let firstAirline = accounts[1];
 
     let flightSuretyData = await FlightSuretyData.new();
-    let flightSuretyApp = await FlightSuretyApp.new();
+    // Since the constructor has 2 params
+    let flightSuretyApp = await FlightSuretyApp.new(FlightSuretyData.address, firstAirline);
+    //let flightSuretyApp = await FlightSuretyApp.new();
 
     
     return {

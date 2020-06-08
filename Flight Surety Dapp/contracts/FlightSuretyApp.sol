@@ -5,16 +5,20 @@ pragma solidity ^0.4.25;
 // More info: https://www.nccgroup.trust/us/about-us/newsroom-and-events/blog/2018/november/smart-contract-insecurity-bad-arithmetic/
 
 import "../node_modules/openzeppelin-solidity/contracts/math/SafeMath.sol";
-
+// Import the FlightData
+import "./FlightSuretyData.sol";
 /************************************************** */
 /* FlightSurety Smart Contract                      */
 /************************************************** */
 contract FlightSuretyApp {
     using SafeMath for uint256; // Allow SafeMath functions to be called for all uint256 types (similar to "prototype" in Javascript)
-
+    FlightSuretyData dataContract;
     /********************************************************************************************/
     /*                                       DATA VARIABLES                                     */
     /********************************************************************************************/
+
+    // Set the Operatinal to true
+    bool private operational = true;
 
     // Flight status codees
     uint8 private constant STATUS_CODE_UNKNOWN = 0;
@@ -27,10 +31,11 @@ contract FlightSuretyApp {
     address private contractOwner; // Account used to deploy contract
 
     struct Flight {
-        bool isRegistered;
-        uint8 statusCode;
-        uint256 updatedTimestamp;
         address airline;
+        uint256 timestamp;
+        uint8 statusCode;
+        address passenger;
+        uint256 value;
     }
     mapping(bytes32 => Flight) private flights;
 
@@ -48,7 +53,7 @@ contract FlightSuretyApp {
      */
     modifier requireIsOperational() {
         // Modify to call data contract's status
-        require(true, "Contract is currently not operational");
+        require(operational == true, "Contract is currently not operational");
         _; // All modifiers require an "_" which indicates where the function body will be added
     }
 
@@ -60,6 +65,17 @@ contract FlightSuretyApp {
         _;
     }
 
+    /**
+     * @dev Modifier that requires that Airline can Create or Update
+     */
+    modifier canAirlineCreateOrUpdate() {
+        // Check if the AirlinesCount() is 0 or Airline Exists or not
+        bool canCreate = (dataContract.getAirlinesCount() == 0) || (dataContract.isAirline(msg.sender) == true);
+        // If recived true then allow to create or update
+        require(canCreate == true, "You can not create or update airline");
+        _;
+    }
+
     /********************************************************************************************/
     /*                                       CONSTRUCTOR                                        */
     /********************************************************************************************/
@@ -68,17 +84,28 @@ contract FlightSuretyApp {
      * @dev Contract constructor
      *
      */
-    constructor() public {
+    constructor(address dataContractAddress, address firstAirlineAddress) public {
         contractOwner = msg.sender;
+        dataContract = FlightSuretyData(dataContractAddress);
+        registerAirline(firstAirlineAddress);
     }
 
     /********************************************************************************************/
     /*                                       UTILITY FUNCTIONS                                  */
     /********************************************************************************************/
 
-    function isOperational() public pure returns (bool) {
-        return true; // Modify to call data contract's status
+    function isOperational() public view returns (bool) {
+        return operational; // Modify to call data contract's status
     }
+
+    /********************************************************************************************/
+    /*                                       EVENT DEFINITIONS                                  */
+    /********************************************************************************************/
+    event ToVoteAirline(address airline);
+    event AirlineWasVoted(address airline, bool needApproved);
+    event AirlineWasFunded(address airline);
+    event InsurancePayout(address airline, string flight, uint256 timestamp, uint256 insurancePayoutValue, uint256 passengerBalance);
+    event UpdatedPassengerBalance(uint256 balance);
 
     /********************************************************************************************/
     /*                                     SMART CONTRACT FUNCTIONS                             */
@@ -88,13 +115,9 @@ contract FlightSuretyApp {
      * @dev Add an airline to the registration queue
      *
      */
-
-    function registerAirline()
-        external
-        pure
-        returns (bool success, uint256 votes)
-    {
-        return (success, 0);
+    function registerAirline(address airlineAddress) public requireIsOperational canAirlineCreateOrUpdate {
+        // Successfully Register an airline
+        dataContract.registerAirline(airlineAddress);
     }
 
     /**
@@ -102,19 +125,86 @@ contract FlightSuretyApp {
      *
      */
 
-    function registerFlight() external pure {}
+    function registerFlight(address airline, string flight, uint256 timestamp) public payable requireIsOperational{
+        // For registering we have set amount to Max 1 Ether
+        require(msg.value <= 1 ether, 'Max pay value is 1 ether');
+        require(msg.value > 0, 'Pay value is required');
+
+        bytes32 key = getFlightKey(airline, flight, timestamp);
+
+        flights[key] = Flight({
+            airline: airline,
+            timestamp: timestamp,
+            statusCode: STATUS_CODE_UNKNOWN,
+            passenger: msg.sender,
+            value: msg.value
+        });
+        dataContract.buy.value(msg.value)(msg.sender, key);
+    }
 
     /**
      * @dev Called after oracle has updated flight status
      *
+     */ 
+
+    /**
+     * @dev Vote an airline
+     *
      */
+    function voteAirline(address airlineAddress) public requireIsOperational canAirlineCreateOrUpdate {
+        bool needApproved = dataContract.voteAirline(airlineAddress, msg.sender);
+        emit AirlineWasVoted(airlineAddress, needApproved);
+    }
+
+    /**
+     * @dev Fund flight for insuring.
+     *
+     */
+    function fundAirline() public payable requireIsOperational canAirlineCreateOrUpdate{
+        // Base check should have >= 10 Ethers
+        require(msg.value >= 10 ether, 'No enough funds');
+        dataContract.fund.value(msg.value)(msg.sender);
+        emit AirlineWasFunded(msg.sender);
+    }
+
+    /**
+     * @dev Get Passeneger Balance
+     *
+     */
+    function getPassengerBalance(address passengerAddress) public view requireIsOperational returns(uint256 balance){
+        return dataContract.getPassengerBalance(passengerAddress);
+    }
+
+    /**
+     * @dev Withdraw Passenger funds
+     *
+     */
+    function withdrawPassengerFunds() public requireIsOperational {
+        uint256 passengerBalance = dataContract.getPassengerBalance(msg.sender);
+        require(passengerBalance > 0, "Insufficient funds on passenger's balance");
+        dataContract.pay(msg.sender);
+        emit UpdatedPassengerBalance(dataContract.getPassengerBalance(msg.sender));
+    }
 
     function processFlightStatus(
         address airline,
         string memory flight,
         uint256 timestamp,
         uint8 statusCode
-    ) internal pure {}
+    ) internal requireIsOperational  {
+        // Get the FlightKey and status code
+        bytes32 key = getFlightKey(airline, flight, timestamp);
+        flights[key].statusCode = statusCode;
+        // We r intersted in this code only => 20
+        if (statusCode == STATUS_CODE_LATE_AIRLINE) {
+            dataContract.creditInsurees(key);
+            uint256 insurancePayoutValue = dataContract.getInsurancePayoutValue(key);
+            uint256 passengerBalance = dataContract.getPassengerBalance(flights[key].passenger);
+            emit InsurancePayout(airline, flight, timestamp, insurancePayoutValue, passengerBalance);
+        } else {
+            dataContract.closeInsurance(key);
+        }
+    }
 
     // Generate a request for oracles to fetch flight information
     function fetchFlightStatus(
@@ -136,6 +226,16 @@ contract FlightSuretyApp {
         emit OracleRequest(index, airline, flight, timestamp);
     }
 
+    /**
+    * @dev Sets contract operations on/off
+    *
+    * When operational mode is disabled, all write transactions except for this one will fail
+    */
+    function setOperatingStatus(bool mode) public requireContractOwner {
+        operational = mode;
+    }
+
+    // ******************************************************************************
     // region ORACLE MANAGEMENT
 
     // Incremented to add pseudo-randomness at various points

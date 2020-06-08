@@ -21,7 +21,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 Please make sure you've already installed ganache-cli, Truffle and enabled MetaMask extension in your browser.
 
-- Contract address [https://ropsten.etherscan.io/address/](0x7E84b5E10580C0620466723688a76905D3B71cEb)
+- Contract address [0x7E84b5E10580C0620466723688a76905D3B71cEb](https://ropsten.etherscan.io/address/0x7E84b5E10580C0620466723688a76905D3B71cEb)
 - Truffle v5.1.28
 - Solidity  >=0.4.24 (solc-js)
 - Node v14.4.0

@@ -9,7 +9,10 @@ This repository contains Smart Contract code in Solidity (using Truffle), tests 
 To install, download or clone the repo, then:
 
 `npm install`
+
 `truffle compile`
+
+![migrate](./snips/compile.png)
 
 ## Develop Client
 
@@ -21,6 +24,12 @@ To run truffle tests:
 To use the dapp:
 
 `truffle migrate`
+
+![migrate](./snips/deploy.png)
+
+
+![migrate](./snips/deployaddress.png)
+
 `npm run dapp`
 
 To view dapp:

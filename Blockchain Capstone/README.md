@@ -148,3 +148,5 @@ Test minting with zkSnarks.
 * [Interactive zero knowledge 3-colorability demonstration](http://web.mit.edu/~ezyang/Public/graph/svg.html)
 * [Docker](https://docs.docker.com/install/)
 * [ZoKrates](https://github.com/Zokrates/ZoKrates)
+* [How to list on Opensea](https://medium.com/opensea/how-to-create-your-own-marketplace-on-opensea-in-three-minutes-or-less-12373ca5818a)
+* [Complete Guide](https://medium.com/@andresaaap/capstone-real-estate-marketplace-project-faq-udacity-blockchain-69fe13b4c14e)

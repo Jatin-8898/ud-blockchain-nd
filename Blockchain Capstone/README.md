@@ -134,6 +134,10 @@ Test minting with zkSnarks.
 
     https://ropsten.etherscan.io/tx/0xf6d85e381c80c4e1f9d1eed5f1d4ab4db7cc39bc3101475cbd68b4348b6536ac
 
+# Assets
+
+    https://rinkeby.opensea.io/assets/0x750d49c089b8721dc884680eb9814419b5d97310/1/
+
 # Project Resources
 
 * [Remix - Solidity IDE](https://remix.ethereum.org/)
